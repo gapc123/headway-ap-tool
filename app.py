@@ -11,7 +11,10 @@ from docx.oxml.ns import qn
 from docx.oxml import OxmlElement
 
 app = Flask(__name__)
-client = anthropic.Anthropic(api_key=os.environ.get('ANTHROPIC_API_KEY'))
+client = anthropic.Anthropic(
+    api_key=os.environ.get('ANTHROPIC_API_KEY'),
+    timeout=80.0
+)
 
 DOMAINS = [
     "Domain 1: Culture",
@@ -184,7 +187,7 @@ INTERIM REVIEW TRANSCRIPT:
 """
 
     message = client.messages.create(
-        model="claude-sonnet-4-6",
+        model="claude-haiku-4-5-20251001",
         max_tokens=8000,
         messages=[{"role": "user", "content": prompt}]
     )
