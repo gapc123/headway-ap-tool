@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Headway AP – Interim Review Generator</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+      color: #333;
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 40px 20px;
+    }
+    .card {
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+      padding: 40px;
+      max-width: 700px;
+      width: 100%;
+    }
+    .logo-area {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+    .logo-area h1 {
+      font-size: 22px;
+      color: #1a3d6e;
+      margin-top: 8px;
+    }
+    .logo-area p {
+      color: #666;
+      font-size: 14px;
+      margin-top: 4px;
+    }
+    .section-label {
+      font-weight: bold;
+      font-size: 13px;
+      color: #1a3d6e;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+      margin-top: 24px;
+    }
+    .hint {
+      font-size: 12px;
+      color: #888;
+      margin-bottom: 8px;
+    }
+    input[type="file"] {
+      display: block;
+      width: 100%;
+      padding: 10px;
+      border: 2px dashed #ccc;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      background: #fafafa;
+    }
+    input[type="file"]:hover { border-color: #1a3d6e; }
+    textarea {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 14px;
+      font-family: Arial, sans-serif;
+      resize: vertical;
+      min-height: 160px;
+      background: #fafafa;
+    }
+    textarea:focus { outline: none; border-color: #1a3d6e; }
+    .domain-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .domain-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: bold;
+      margin-bottom: 6px;
+      color: #444;
+    }
+    select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 14px;
+      background: #fafafa;
+      color: #333;
+    }
+    select:focus { outline: none; border-color: #1a3d6e; }
+    .btn {
+      display: block;
+      width: 100%;
+      margin-top: 32px;
+      padding: 14px;
+      background: #1a3d6e;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn:hover { background: #0f2a50; }
+    .btn:disabled { background: #999; cursor: not-allowed; }
+    .status {
+      margin-top: 16px;
+      padding: 12px;
+      border-radius: 6px;
+      font-size: 14px;
+      display: none;
+      text-align: center;
+    }
+    .status.loading { background: #e8f0fb; color: #1a3d6e; display: block; }
+    .status.error { background: #fdecea; color: #c0392b; display: block; }
+    .status.success { background: #eafaf1; color: #1e8449; display: block; }
+    .spinner {
+      display: inline-block;
+      width: 16px; height: 16px;
+      border: 2px solid #1a3d6e;
+      border-top-color: transparent;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      vertical-align: middle;
+      margin-right: 8px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    hr { border: none; border-top: 1px solid #eee; margin: 28px 0; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo-area">
+      <h1>Headway Approved Provider</h1>
+      <p>Interim Review Report Generator</p>
+    </div>
+
+    <form id="reportForm" enctype="multipart/form-data">
+
+      <div class="section-label">1. Reaccreditation Report</div>
+      <div class="hint">Upload the PDF of the most recent reaccreditation report for this unit.</div>
+      <input type="file" name="reaccreditation_report" id="pdfInput" accept=".pdf" required>
+
+      <hr>
+
+      <div class="section-label">2. Focus Domains</div>
+      <div class="hint">Select the two domains that will be reviewed in detail during this interim review.</div>
+      <div class="domain-grid">
+        <div class="domain-group">
+          <label for="focus1">Focus Domain 1</label>
+          <select name="focus_domain_1" id="focus1" required>
+            {% for d in domains %}
+            <option value="{{ d }}">{{ d }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="domain-group">
+          <label for="focus2">Focus Domain 2</label>
+          <select name="focus_domain_2" id="focus2" required>
+            {% for d in domains %}
+            <option value="{{ d }}" {% if loop.index == 2 %}selected{% endif %}>{{ d }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      <hr>
+
+      <div class="section-label">3. Teams Meeting Transcript</div>
+      <div class="hint">Paste the full transcript from the Copilot-generated Teams meeting recap below.</div>
+      <textarea name="transcript" id="transcript" placeholder="Paste transcript here..." required></textarea>
+
+      <button type="submit" class="btn" id="submitBtn">Generate Interim Review Report</button>
+    </form>
+
+    <div class="status" id="status"></div>
+  </div>
+
+  <script>
+    const form = document.getElementById('reportForm');
+    const btn = document.getElementById('submitBtn');
+    const status = document.getElementById('status');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const f1 = document.getElementById('focus1').value;
+      const f2 = document.getElementById('focus2').value;
+      if (f1 === f2) {
+        status.className = 'status error';
+        status.textContent = 'Please select two different focus domains.';
+        return;
+      }
+
+      btn.disabled = true;
+      status.className = 'status loading';
+      status.innerHTML = '<span class="spinner"></span> Generating report — this takes around 30–60 seconds…';
+
+      try {
+        const formData = new FormData(form);
+        const response = await fetch('/generate', { method: 'POST', body: formData });
+
+        if (response.ok) {
+          const blob = await response.blob();
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          const disposition = response.headers.get('Content-Disposition') || '';
+          const match = disposition.match(/filename="?([^"]+)"?/);
+          a.download = match ? match[1] : 'Interim_Review.docx';
+          a.href = url;
+          a.click();
+          URL.revokeObjectURL(url);
+          status.className = 'status success';
+          status.textContent = '✓ Report generated and downloaded successfully. Review and moderate before sending.';
+        } else {
+          const err = await response.json().catch(() => ({ error: 'Unknown error' }));
+          status.className = 'status error';
+          status.textContent = 'Error: ' + (err.error || 'Something went wrong. Please try again.');
+        }
+      } catch (err) {
+        status.className = 'status error';
+        status.textContent = 'Network error: ' + err.message;
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
