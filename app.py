@@ -4,6 +4,7 @@ import json
 import tempfile
 import pdfplumber
 import anthropic
+import httpx
 from flask import Flask, render_template, request, send_file, jsonify
 from docx import Document
 from docx.shared import Pt
@@ -11,9 +12,12 @@ from docx.oxml.ns import qn
 from docx.oxml import OxmlElement
 
 app = Flask(__name__)
+_http_client = httpx.Client(
+    timeout=httpx.Timeout(connect=10.0, read=75.0, write=10.0, pool=5.0)
+)
 client = anthropic.Anthropic(
     api_key=os.environ.get('ANTHROPIC_API_KEY'),
-    timeout=80.0
+    http_client=_http_client
 )
 
 DOMAINS = [
