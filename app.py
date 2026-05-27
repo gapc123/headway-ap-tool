@@ -192,7 +192,7 @@ INTERIM REVIEW TRANSCRIPT:
 
     message = client.messages.create(
         model="claude-haiku-4-5-20251001",
-        max_tokens=8000,
+        max_tokens=4000,
         messages=[{"role": "user", "content": prompt}]
     )
 
@@ -379,6 +379,19 @@ def populate_document(template_path, data):
     doc.save(buf)
     buf.seek(0)
     return buf
+
+
+@app.route("/test")
+def test_api():
+    try:
+        msg = client.messages.create(
+            model="claude-haiku-4-5-20251001",
+            max_tokens=20,
+            messages=[{"role": "user", "content": "Say hello in one word"}]
+        )
+        return jsonify({"status": "ok", "response": msg.content[0].text})
+    except Exception as e:
+        return jsonify({"status": "error", "error": str(e)}), 500
 
 
 @app.route("/")
