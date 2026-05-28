@@ -184,10 +184,10 @@ Return ONLY a valid JSON object with this structure (no markdown, no explanation
 }}
 
 REACCREDITATION REPORT:
-{pdf_text[:15000]}
+{pdf_text[:5000]}
 
 INTERIM REVIEW TRANSCRIPT:
-{transcript[:8000]}
+{transcript[:3000]}
 """
 
     message = client.messages.create(
