@@ -117,18 +117,24 @@ def maybe_set_cell(cell, text, italic=False):
 
 def set_tick(cell, standard_met):
     """Keep only the correct tick/cross in a Standard Met cell.
-    Para 0 = green tick (achieved)
-    Para 1 = red cross (not_achieved)
-    Para 2 = orange tick (partial)
+    Drawing 0 = green tick (achieved)
+    Drawing 1 = red cross (not_achieved)
+    Drawing 2 = orange tick (partial)
+    Works by finding only the paragraphs that contain drawings, then
+    removing the unwanted ones directly via lxml on the tc element.
     """
+    from lxml import etree
     status_to_keep = {"achieved": 0, "not_achieved": 1, "partial": 2}
     keep_idx = status_to_keep.get(standard_met, 0)
-    paras = cell.paragraphs
-    if len(paras) >= 3:
-        for i in range(len(paras) - 1, -1, -1):
+    tc = cell._tc
+    ns = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main'
+    all_p = tc.findall(f'{{{ns}}}p')
+    # Only consider paragraphs that contain a drawing
+    drawing_p = [p for p in all_p if b'drawing' in etree.tostring(p)]
+    if len(drawing_p) >= 3:
+        for i, p in enumerate(drawing_p):
             if i != keep_idx:
-                p = paras[i]._element
-                p.getparent().remove(p)
+                tc.remove(p)
 
 
 def replace_paragraph_text(doc, search_text, new_text):
@@ -283,10 +289,14 @@ def populate_document(template_path, data):
         for row in table.rows:
             for cell in row.cells:
                 txt = cell.text.strip()
-                if "paste from most recent" in txt.lower() and std_idx < len(standards):
-                    ev = standards[std_idx].get("evidence_text", INSUFFICIENT)
-                    status = standards[std_idx].get("standard_met", "achieved")
-                    maybe_set_cell(cell, ev, italic=True)
+                if "paste from most recent" in txt.lower():
+                    if std_idx < len(standards):
+                        ev = standards[std_idx].get("evidence_text", INSUFFICIENT)
+                        status = standards[std_idx].get("standard_met", "achieved")
+                    else:
+                        ev = INSUFFICIENT
+                        status = "achieved"  # default green — reaccredited units meet all standards
+                    maybe_set_cell(cell, ev, italic=(ev != INSUFFICIENT))
                     # Set correct tick in Standard Met column (col 3)
                     if len(row.cells) > 3:
                         set_tick(row.cells[3], status)
